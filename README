@@ -1,0 +1,14 @@
+1、需求分析
+使用zset来加快sql查询的速度，zset是redis中的有序集合，可以直接排序，所以将id作为value，时间作为source进行排序，
+查询分页时，对集合排序，获取对的50条记录的ID，
+直接进行in条件查询，可以不使用limit分页
+2、直接使用sql
+第一页
+select * from table where xxx order by id desc limit 50;
+其他页码
+select * from table where id < 上一页最后ID desc limit 50;
+
+limit 800050,50 这条语句是扫描前800050行，扔掉前800000行，返回最后50行所以很慢，但是使用where，直接定位到上一页的最后一条ID，然后获取50行，不需要扫描太多
+直接在聚簇索引树中定位，拿取数据就可以
+
+3、在实际应用中，可以只允许翻到100页，基本很少有人会看完所有记录。
